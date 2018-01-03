@@ -3,8 +3,13 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 
-const char *ssid = "WiFi rover";
+const char *ssid     = "WiFi Rover";
 const char *password = "helloworld";
+
+int leftM1  = D0;
+int leftM2  = D1;
+int rightM1 = D2;
+int rightM2 = D3;
 
 ESP8266WebServer server(80);
 
@@ -167,48 +172,56 @@ void handleRoot() {
 }
 
 void motorStop() {
-	digitalWrite(D1, LOW);
-	digitalWrite(D2, LOW);
-	digitalWrite(D3, LOW);
-	digitalWrite(D4, LOW);
+	digitalWrite(leftM1, LOW);
+	digitalWrite(leftM2, LOW);
+	digitalWrite(rightM1, LOW);
+	digitalWrite(rightM2, LOW);
 }
 
-void stop() {
+void handleStop() {
 	motorStop();
 	server.send(200, "text/html", "stopping");
 }
 
-void goForward() {
+void handleForward() {
 	motorStop();
-	digitalWrite(D1, HIGH);
+	digitalWrite(leftM1, HIGH);
+	digitalWrite(leftM2, LOW);
+	digitalWrite(rightM1, HIGH);
+	digitalWrite(rightM2, LOW);
 	server.send(200, "text/html", "Going forward");
 }
 
-void goLeft() {
+void handleLeft() {
 	motorStop();
-	digitalWrite(D2, HIGH);
+	digitalWrite(rightM1, HIGH);
+	digitalWrite(rightM2, LOW);
 	server.send(200, "text/html", "Going left");
 }
 
-void goRight() {
+void handleRight() {
 	motorStop();
-	digitalWrite(D3, HIGH);
+	digitalWrite(leftM1, HIGH);
+	digitalWrite(leftM2, LOW);
 	server.send(200, "text/html", "Going right");
 }
 
-void goBackward() {
+void handleBackward() {
 	motorStop();
-	digitalWrite(D4, HIGH);
+	digitalWrite(leftM1, LOW);
+	digitalWrite(leftM2, HIGH);
+	digitalWrite(rightM1, LOW);
+	digitalWrite(rightM2, HIGH);
 	server.send(200, "text/html", "Going backward");
 }
 
 void setup() {
 	delay(1000);
 
-	pinMode(D1, OUTPUT);
-	pinMode(D2, OUTPUT);
-	pinMode(D3, OUTPUT);
-	pinMode(D4, OUTPUT);
+	pinMode(leftM1, OUTPUT);
+	pinMode(leftM2, OUTPUT);
+	pinMode(rightM1, OUTPUT);
+	pinMode(rightM2, OUTPUT);
 
 	Serial.begin(115200);
 	Serial.println();
@@ -220,11 +233,11 @@ void setup() {
 	Serial.print("AP IP address: ");
 	Serial.println(myIP);
 	server.on("/", handleRoot);
-	server.on("/forward", goForward);
-	server.on("/left", goLeft);
-	server.on("/right", goRight);
-	server.on("/backward", goBackward);
-	server.on("/stop", stop);
+	server.on("/forward", handleForward);
+	server.on("/left", handleLeft);
+	server.on("/right", handleRight);
+	server.on("/backward", handleBackward);
+	server.on("/stop", handleStop);
 	server.begin();
 	Serial.println("HTTP server started");
 }
